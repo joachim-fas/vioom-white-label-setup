@@ -211,7 +211,7 @@ function tab(name,btn){ document.querySelectorAll('.panel').forEach(p=>p.classLi
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); window.scrollTo(0,0); }
 
 /* ---------- assets ---------- */
-function svgWord(color){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 605 114"><g fill="'+color+'">'+MARK+'</g></svg>'; }
+function svgWord(color){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 605 114"><g fill="'+color+'">'+MARK.replace(/ fill="currentColor"/g,'')+'</g></svg>'; }
 function svgSignet(color){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220.43 112.78"><path d="'+SIG+'" fill="'+color+'"/></svg>'; }
 function svgAppIcon(){ var bg=val('primary')||'#1B3A6E';
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" rx="52" fill="'+bg+'"/>'+
@@ -247,21 +247,35 @@ function svgPng(svg,w,h){return new Promise(function(res){var img=new Image();va
   img.onload=function(){var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
     c.toBlob(function(b){b.arrayBuffer().then(function(ab){URL.revokeObjectURL(u);res(new Uint8Array(ab));});},'image/png');};img.src=u;});}
 async function downloadZip(){
-  toast('ZIP wird erstellt …'); var R='vioom-assets/'; var files=[];
-  LOGOCOLORS.forEach(function(c){ files.push({name:R+'signet/vioom-signet-'+c[2]+'.svg',bytes:_sb(svgSignet(c[1]))});
-    files.push({name:R+'wortmarke/vioom-wortmarke-'+c[2]+'.svg',bytes:_sb(svgWord(c[1]))}); });
-  files.push({name:R+'app-icon/vioom-app-icon.svg',bytes:_sb(svgAppIcon())});
-  files.push({name:R+'farben/vioom-farben.css',bytes:_sb(colorTokens())});
-  files.push({name:R+'farben/vioom-farben.json',bytes:_sb(assetsJSON())});
-  files.push({name:R+'LIESMICH.txt',bytes:_sb('vioom Marken-Assets\\n\\nsignet/     – Signet freistehend (SVG + PNG transparent), Night/Wiese/Weiss\\nwortmarke/  – Wortmarke freistehend (SVG + PNG transparent), Night/Wiese/Weiss\\napp-icon/   – App-Icon (SVG + PNG 1024/512, ohne Transparenz)\\nfarben/     – Farb-Tokens (CSS + JSON)\\n')});
+  toast('ZIP wird erstellt \u2026'); var R='vioom-assets/'; var files=[];
+  files.push({name:R+'01_app-icon/vioom-app-icon.svg',bytes:_sb(svgAppIcon())});
+  files.push({name:R+'01_app-icon/vioom-app-icon-1024.png',bytes:await svgPng(svgAppIcon(),1024,1024)});
+  files.push({name:R+'01_app-icon/vioom-app-icon-512.png',bytes:await svgPng(svgAppIcon(),512,512)});
   for(var i=0;i<LOGOCOLORS.length;i++){ var c=LOGOCOLORS[i];
-    files.push({name:R+'signet/vioom-signet-'+c[2]+'.png',bytes:await svgPng(svgSignet(c[1]),800,409)});
-    files.push({name:R+'wortmarke/vioom-wortmarke-'+c[2]+'.png',bytes:await svgPng(svgWord(c[1]),800,151)}); }
-  files.push({name:R+'app-icon/vioom-app-icon-1024.png',bytes:await svgPng(svgAppIcon(),1024,1024)});
-  files.push({name:R+'app-icon/vioom-app-icon-512.png',bytes:await svgPng(svgAppIcon(),512,512)});
+    files.push({name:R+'02_menue-logo/vioom-signet-'+c[2]+'.svg',bytes:_sb(svgSignet(c[1]))});
+    files.push({name:R+'02_menue-logo/vioom-signet-'+c[2]+'.png',bytes:await svgPng(svgSignet(c[1]),1024,524)}); }
+  for(var j=0;j<LOGOCOLORS.length;j++){ var d=LOGOCOLORS[j];
+    files.push({name:R+'03_welcome-logo/vioom-wortmarke-'+d[2]+'.svg',bytes:_sb(svgWord(d[1]))});
+    files.push({name:R+'03_welcome-logo/vioom-wortmarke-'+d[2]+'.png',bytes:await svgPng(svgWord(d[1]),1024,193)}); }
+  files.push({name:R+'04_farben/vioom-farben.css',bytes:_sb(colorTokens())});
+  files.push({name:R+'04_farben/vioom-farben.json',bytes:_sb(assetsJSON())});
+  files.push({name:R+'LIESMICH.txt',bytes:_sb(liesmich())});
   var blob=makeZip(files); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='vioom-assets.zip'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},2000); toast('vioom-assets.zip geladen ('+files.length+' Dateien)');
 }
+function liesmich(){ return [
+ 'vioom \u2013 Marken-Assets f\u00fcr die ioki White-Label App',
+ 'Stand: '+new Date().toISOString().slice(0,10),
+ '',
+ 'Alle Logos liegen als SVG (Vektor) UND PNG vor.',
+ 'Regel: vioom-Logo nie schwarz \u2013 auf hell = Night (#1B3A6E), auf dunkel/blau = Wei\u00df.',
+ '',
+ '01_app-icon/     \u2013 ioki #14 \u00b7 App Icon (erzeugt auch den Splash). PNG 1024 & 512 (ohne Transparenz) + SVG. Fl\u00e4che = Prim\u00e4rfarbe, Signet wei\u00df.',
+ '02_menue-logo/   \u2013 ioki #15 \u00b7 Men\u00fc-Logo (reduziert = Signet). SVG + PNG, transparent, in Night / Wiese / Wei\u00df.',
+ '03_welcome-logo/ \u2013 ioki #16 \u00b7 Welcome-Logo (Volllogo = Wortmarke). SVG + PNG, transparent, in Night / Wiese / Wei\u00df.',
+ '04_farben/       \u2013 ioki #12/13 \u00b7 Farb-Tokens (Prim\u00e4r, Sekund\u00e4r, Darkmode) als CSS + JSON.',
+ ''
+].join('\n'); }
 function buildAssets(){
   var chip=function(c){return '<span style="display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px;background:'+c[1]+(c[1].toLowerCase()==='#ffffff'?';border:1px solid #c9d2de':'')+'"></span>';};
   var cols=LOGOCOLORS.map(chip).join('');
@@ -269,10 +283,10 @@ function buildAssets(){
     '<p style="font-size:12px;color:var(--mut);margin-top:2px">Ein Ordner <code>vioom-assets/</code> mit Signet, Wortmarke, App-Icon &amp; Farb-Tokens — sauber benannt, als ZIP.</p></div>'+
     '<button class="btn" style="padding:12px 18px" onclick="downloadZip()">⬇  Assets als ZIP herunterladen</button></div>';
   html+='<div class="assets">';
-  html+='<div class="acard"><div class="thumb">'+svgSignet('#1B3A6E')+'</div><h3>Signet · freistehend</h3><p>SVG + PNG (transparent)<br>'+cols+'Night · Wiese · Weiß</p></div>';
-  html+='<div class="acard"><div class="thumb">'+svgWord('#1B3A6E')+'</div><h3>Wortmarke · freistehend</h3><p>SVG + PNG (transparent)<br>'+cols+'Night · Wiese · Weiß</p></div>';
-  html+='<div class="acard"><div class="thumb">'+svgAppIcon()+'</div><h3>App-Icon</h3><p>PNG 1024 &amp; 512 (ohne Transparenz) + SVG. Fläche: '+val('primary')+'.</p></div>';
-  html+='<div class="acard"><div class="thumb"><div class="sw" style="width:84%"><div style="background:'+val('primary')+'">'+val('primary')+'</div><div style="background:'+val('secondary')+'">'+val('secondary')+'</div></div></div><h3>Farb-Tokens</h3><p>Primär, Sekundär &amp; Darkmode als CSS + JSON.</p></div>';
+  html+='<div class="acard"><div class="thumb">'+svgSignet('#1B3A6E')+'</div><h3>Menü-Logo · Signet <span style="opacity:.55;font-weight:600">(ioki #15)</span></h3><p>SVG + PNG (transparent)<br>'+cols+'Night · Wiese · Weiß</p></div>';
+  html+='<div class="acard"><div class="thumb">'+svgWord('#1B3A6E')+'</div><h3>Welcome-Logo · Wortmarke <span style="opacity:.55;font-weight:600">(ioki #16)</span></h3><p>SVG + PNG (transparent)<br>'+cols+'Night · Wiese · Weiß</p></div>';
+  html+='<div class="acard"><div class="thumb">'+svgAppIcon()+'</div><h3>App-Icon <span style="opacity:.55;font-weight:600">(ioki #14 · erzeugt Splash)</span></h3><p>PNG 1024 &amp; 512 (ohne Transparenz) + SVG. Fläche: '+val('primary')+'.</p></div>';
+  html+='<div class="acard"><div class="thumb"><div class="sw" style="width:84%"><div style="background:'+val('primary')+'">'+val('primary')+'</div><div style="background:'+val('secondary')+'">'+val('secondary')+'</div></div></div><h3>Farben <span style="opacity:.55;font-weight:600">(ioki #12/13)</span></h3><p>Primär, Sekundär &amp; Darkmode als CSS + JSON.</p></div>';
   html+='</div>';
   document.getElementById('assetroot').innerHTML=html;
 }
